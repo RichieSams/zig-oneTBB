@@ -43,6 +43,7 @@ pub fn build(b: *std.Build) void {
         tbb_malloc_proxy_win32_resource_file,
     );
     tbb_malloc_proxy.root_module.addCMacro("__TBBMALLOCPROXY_BUILD", "1");
+    tbb_malloc_proxy.linkLibrary(tbb_malloc);
 }
 
 fn createLibrary(b: *std.Build, upstream: *std.Build.Dependency, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, linkage: std.builtin.LinkMode, name: []const u8, cpp_files: []const []const u8, win32_resource_file: []const u8) *std.Build.Step.Compile {
@@ -69,7 +70,7 @@ fn createLibrary(b: *std.Build, upstream: *std.Build.Dependency, target: std.Bui
             // NOP
         },
         else => {
-            lib.root_module.addCMacro("__TBB_USE_ITT_NOTIFY", "1");
+            lib.root_module.c_macros.append(b.allocator, "-D__TBB_USE_ITT_NOTIFY") catch @panic("OOM");
         },
     }
 
@@ -109,9 +110,12 @@ fn createLibrary(b: *std.Build, upstream: *std.Build.Dependency, target: std.Bui
     });
 
     if (target.result.os.tag != std.Target.Os.Tag.windows) {
-        // Expose POSIX features (sem_t) to C/C++ headers
-        lib.root_module.addCMacro("_XOPEN_SOURCE", "700");
         lib.linkSystemLibrary("pthread");
+    }
+
+    if (target.result.os.tag == std.Target.Os.Tag.macos) {
+        // Expose POSIX features (sem_t) to C/C++ headers
+        lib.root_module.c_macros.append(b.allocator, "-D_XOPEN_SOURCE") catch @panic("OOM");
     }
 
     if (target.result.os.tag == std.Target.Os.Tag.windows) {
@@ -157,7 +161,7 @@ const tbb_files: []const []const u8 = &.{
     "tbb/version.cpp",
     "tbb/queuing_rw_mutex.cpp",
 };
-const tbb_win32_resource_file: []const u8 = "tbb/tbb.rc";
+const tbb_win32_resource_file: []const u8 = "src/tbb/tbb.rc";
 
 const tbb_malloc_files: []const []const u8 = &.{
     "tbbmalloc/backend.cpp",
@@ -165,12 +169,12 @@ const tbb_malloc_files: []const []const u8 = &.{
     "tbbmalloc/frontend.cpp",
     "tbbmalloc/large_objects.cpp",
     "tbbmalloc/tbbmalloc.cpp",
-    //"tbb/itt_notify.cpp",
+    "tbb/itt_notify.cpp",
 };
-const tbb_malloc_win32_resource_file: []const u8 = "tbbmalloc/tbbmalloc.rc";
+const tbb_malloc_win32_resource_file: []const u8 = "src/tbbmalloc/tbbmalloc.rc";
 
 const tbb_malloc_proxy_files: []const []const u8 = &.{
     "tbbmalloc_proxy/function_replacement.cpp",
     "tbbmalloc_proxy/proxy.cpp",
 };
-const tbb_malloc_proxy_win32_resource_file: []const u8 = "tbbmalloc_proxy/tbbmalloc_proxy.rc";
+const tbb_malloc_proxy_win32_resource_file: []const u8 = "src/tbbmalloc_proxy/tbbmalloc_proxy.rc";

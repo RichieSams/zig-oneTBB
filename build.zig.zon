@@ -1,0 +1,18 @@
+.{
+    .name = .oneTBB,
+    .version = "2022.3.0",
+    .fingerprint = 0x53b25966e7cd6e35,
+    .minimum_zig_version = "0.16.0-dev.1484+d0ba6642b",
+    .dependencies = .{
+        .oneTBB = .{
+            .url = "git+https://github.com/uxlfoundation/oneTBB.git?ref=v2022.3.0#f1862f38f83568d96e814e469ab61f88336cc595",
+            .hash = "N-V-__8AAK1e_QDFlJuRkfLuhEn2nMpv8PwTF4QA3dzdOWKY",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE",
+        "README.md",
+    },
+}
